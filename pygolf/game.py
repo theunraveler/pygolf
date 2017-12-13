@@ -79,7 +79,17 @@ class Round(object):
         """
         Returns a list of scores in the order of the game's players.
         """
-        return [hand.score for hand in self.hands]
+        scores = [hand.score for hand in self.hands]
+
+        for index, hand in enumerate(self.hands):
+            # Four corners.
+            if hand.is_four_corners:
+                for j in range(len(self.hands)):
+                    if j == index:
+                        continue
+                    scores[j] += 30
+
+        return scores
 
     def end_turn(self):
         """
@@ -211,6 +221,12 @@ class Hand(object):
             score += row[1].card.points
 
         return score
+
+    @property
+    def is_four_corners(self):
+        return len(set([
+            self.cards[index].card.rank for index in [0, 1, 4, 5]
+        ])) == 1
 
     def flip_all(self):
         for card in self.cards:
