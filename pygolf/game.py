@@ -41,7 +41,7 @@ class Round(object):
                 hand.cards.append(HandCard(self.deck.draw()))
         self.__current_hand = 0
         self.__terminal_hand = None
-        self.last_discard = None
+        self.last_discard = self.deck.draw()
 
     @property
     def is_terminal(self):

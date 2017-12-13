@@ -73,26 +73,27 @@ def _do_turn(round_):
 
     _puts_formatted_hand(round_.current_hand)
 
-    if round_.last_discard:
-        _draw_action = prompt.options('What would you like to do?', [
-            {'selector': str(DrawAction.ACTION_TAKE), 'prompt': 'Take the %s from the discard pile' % colored.green(str(round_.last_discard))},
-            {'selector': str(DrawAction.ACTION_DRAW), 'prompt': 'Draw a card'},
-        ], default=str(DrawAction.ACTION_DRAW))
-    else:
-        _draw_action = DrawAction.ACTION_DRAW
-
+    _draw_action = prompt.options('What would you like to do?', [
+        {'selector': str(DrawAction.ACTION_TAKE), 'prompt': 'Take the %s from the discard pile' % colored.green(str(round_.last_discard))},
+        {'selector': str(DrawAction.ACTION_DRAW), 'prompt': 'Draw a card'},
+    ], default=str(DrawAction.ACTION_DRAW))
     draw_action = DrawAction(round_, _draw_action)
     card = draw_action()
 
     if draw_action.action == DrawAction.ACTION_DRAW:
         puts('Drew a ', newline=False)
         puts(colored.green(str(card)))
+        _card_action = prompt.options(
+            'What would you like to do with the %s?' % colored.green(str(card)),
+            CARD_ACTIONS,
+            default=str(CardAction.ACTION_DISCARD),
+        )
+    else:
+        _card_action = prompt.options(
+            'What would you like to do with the %s?' % colored.green(str(card)),
+            [a for a in CARD_ACTIONS if a['selector'] != str(CardAction.ACTION_DISCARD)],
+        )
 
-    _card_action = prompt.options(
-        'What would you like to do with the %s?' % colored.green(str(card)),
-        CARD_ACTIONS,
-        default=str(CardAction.ACTION_DISCARD),
-    )
     CardAction(round_, _card_action)(card)
 
     round_.end_turn()
