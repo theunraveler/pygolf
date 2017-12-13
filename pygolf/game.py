@@ -158,22 +158,25 @@ class CardAction(object):
     """
 
     ACTION_DISCARD = 0
-    ACTIONS = {
+    TAKE_ACTIONS = {
         1: 'Replace the top left card',
         2: 'Replace the top right card',
         3: 'Replace the middle left card',
         4: 'Replace the middle right card',
         5: 'Replace the bottom left card',
         6: 'Replace the bottom right card',
-        ACTION_DISCARD: 'Discard',
     }
+    DRAW_ACTIONS = TAKE_ACTIONS.copy()
+    DRAW_ACTIONS.update({
+        ACTION_DISCARD: 'Discard',
+    })
 
     def __init__(self, round_, action):
         self.round = round_
         self.action = int(action)
 
     def __call__(self, card):
-        assert self.action in self.ACTIONS.keys(), 'Action is invalid'
+        assert self.action in self.DRAW_ACTIONS.keys(), 'Action is invalid'
 
         if self.action == self.ACTION_DISCARD:
             self.round.last_discard = card

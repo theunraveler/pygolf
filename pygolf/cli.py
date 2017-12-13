@@ -18,9 +18,13 @@ INIT_ACTIONS = {
 INIT_ACTION_VALIDATOR = validators.OptionValidator(INIT_ACTIONS.keys())
 
 
-CARD_ACTIONS = [
+CARD_TAKE_ACTIONS = [
     {'selector': str(index), 'prompt': message}
-    for index, message in list(CardAction.ACTIONS.items())
+    for index, message in list(CardAction.TAKE_ACTIONS.items())
+]
+CARD_DRAW_ACTIONS = [
+    {'selector': str(index), 'prompt': message}
+    for index, message in list(CardAction.DRAW_ACTIONS.items())
 ]
 
 
@@ -96,13 +100,13 @@ def _do_turn(round_):
         puts(colored.green(str(card)))
         _card_action = prompt.options(
             'What would you like to do with the %s?' % colored.green(str(card)),
-            CARD_ACTIONS,
+            CARD_DRAW_ACTIONS,
             default=str(CardAction.ACTION_DISCARD),
         )
     else:
         _card_action = prompt.options(
             'What would you like to do with the %s?' % colored.green(str(card)),
-            [a for a in CARD_ACTIONS if a['selector'] != str(CardAction.ACTION_DISCARD)],
+            CARD_TAKE_ACTIONS
         )
 
     CardAction(round_, _card_action)(card)
