@@ -28,12 +28,6 @@ class Card(object):
         RANK_KING
     ]
 
-    POINTS = {
-        RANK_ACE: -2, RANK_TWO: 2, RANK_THREE: 3, RANK_FOUR: 4, RANK_FIVE: 5,
-        RANK_SIX: 6, RANK_SEVEN: 7, RANK_EIGHT: 8, RANK_NINE: 9, RANK_TEN: 10,
-        RANK_JACK: 10, RANK_QUEEN: 10, RANK_KING: 0,
-    }
-
     def __init__(self, suit, rank):
         assert suit in self.SUITS, 'Suit is invalid'
         assert rank in self.RANKS, 'Rank is invalid'
@@ -42,7 +36,15 @@ class Card(object):
 
     @property
     def points(self):
-        return self.POINTS[self.rank]
+        if self.rank == self.RANK_ACE:
+            return -2
+        elif self.rank == self.RANK_KING:
+            return 0
+        elif self.rank == self.RANK_QUEEN and self.suit == self.SUIT_SPADE:
+            return 40
+        elif self.rank in [self.RANK_JACK, self.RANK_QUEEN]:
+            return 10
+        return int(self.rank)
 
     def __str__(self):
         return '%s of %ss' % (self.rank, self.suit)
