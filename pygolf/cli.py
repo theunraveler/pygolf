@@ -1,6 +1,7 @@
+from clint.eng import join
 from clint.textui import puts, colored, prompt, validators
 
-from .game import Game, PlayerCard, Player
+from .game import Game, PlayerCard, Player, CardAction, DrawAction
 
 
 INIT_ACTIONS = {
@@ -14,12 +15,9 @@ INIT_ACTIONS = {
 INIT_ACTION_VALIDATOR = validators.OptionValidator(INIT_ACTIONS.keys())
 
 
-CARD_ACTION_TAKE = '1'
-CARD_ACTION_DRAW = '2'
-
-ACTIONS = [
+CARD_ACTIONS = [
     {'selector': str(index), 'prompt': message}
-    for index, message in list(Game.ACTIONS.items())
+    for index, message in list(CardAction.ACTIONS.items())
 ]
 
 
@@ -29,17 +27,9 @@ CARD_HEIGHT = 10
 
 def main():
     puts(colored.green('Welcome to Golf!'))
-
     puts()
-    num_players = prompt.query('How many players?', default='2', validators=[
-        validators.IntegerValidator()
-    ])
-    player_names = [
-        prompt.query('Player %s name:' % (i + 1), default='Player %s' % (i + 1))
-        for i in range(int(num_players))
-    ]
 
-    game = Game(players=[Player(name=name) for name in player_names])
+    game = Game(players=[Player(name=name) for name in _get_players()])
 
     _init(game)
     while not game.is_finished:
@@ -56,20 +46,7 @@ def _init(game):
     for player in game.players:
         puts()
         puts('Now %s should choose 2 cards to flip over.' % (colored.green(str(player))))
-
-        cards = [None, None]
-        while cards[0] == cards[1]:
-            for index, action in list(INIT_ACTIONS.items()):
-                puts('[%s] %s' % (index, action))
-
-            cards = [
-                prompt.query('First card to flip:', validators=[INIT_ACTION_VALIDATOR]),
-                prompt.query('Second card to flip:', validators=[INIT_ACTION_VALIDATOR]),
-            ]
-
-        for card_index in cards:
-            player.cards[int(card_index) - 1].state = PlayerCard.STATE_FACE_UP
-
+        _get_initial_flip(game, player)
         _puts_formatted_hand(player)
         puts()
 
@@ -88,28 +65,28 @@ def _do_turn(game):
     _puts_formatted_hand(player)
 
     if game.last_discard:
-        card_action = prompt.options('What would you like to do?', [
-            {'selector': CARD_ACTION_TAKE, 'prompt': 'Take the %s from the discard pile' % colored.green(str(game.last_discard))},
-            {'selector': CARD_ACTION_DRAW, 'prompt': 'Draw a card'},
-        ], default=CARD_ACTION_DRAW)
-        card = game.last_discard if card_action == CARD_ACTION_TAKE else _do_draw(game)
+        _draw_action = prompt.options('What would you like to do?', [
+            {'selector': str(DrawAction.ACTION_TAKE), 'prompt': 'Take the %s from the discard pile' % colored.green(str(game.last_discard))},
+            {'selector': str(DrawAction.ACTION_DRAW), 'prompt': 'Draw a card'},
+        ], default=str(DrawAction.ACTION_DRAW))
     else:
-        card = _do_draw(game)
+        _draw_action = DrawAction.ACTION_DRAW
 
-    action = prompt.options(
+    draw_action = DrawAction(game, _draw_action)
+    card = draw_action()
+
+    if draw_action.action == DrawAction.ACTION_DRAW:
+        puts('Drew a ', newline=False)
+        puts(colored.green(str(card)))
+
+    _card_action = prompt.options(
         'What would you like to do with the %s?' % colored.green(str(card)),
-        ACTIONS,
-        default=str(Game.ACTION_DISCARD),
+        CARD_ACTIONS,
+        default=str(CardAction.ACTION_DISCARD),
     )
+    CardAction(game, _card_action)(card)
 
-    game.turn(card, int(action))
-
-
-def _do_draw(game):
-    card = game.deck.draw()
-    puts('Drew a ', newline=False)
-    puts(colored.green(str(card)))
-    return card
+    game.end_turn()
 
 
 def _declare_winner(game):
@@ -119,22 +96,46 @@ def _declare_winner(game):
         _puts_player_header(player)
         _puts_formatted_hand(player)
 
-    scores = {p: p.hand_score for p in game.players}
+    scores, winners = game.result
 
     puts('-' * 30)
     for player, score in list(scores.items()):
         puts('%s: %s' % (player, score))
     puts('-' * 30)
 
-    best = min(scores.values())
-    winners = [p for p, s in list(scores.items()) if s == best]
-
     if len(winners) == 1:
         puts(colored.green('%s is the winner!!! Thanks for playing.' % winners[0]))
     else:
-        puts(colored.green('It\'s a tie between %s!!! Thanks for playing!' % ', '.join(
+        puts(colored.green('It\'s a tie between %s!!! Thanks for playing!' % join(
             [str(w) for w in winners]
         )))
+
+
+def _get_players():
+    num_players = prompt.query('How many players?', default='2', validators=[
+        validators.IntegerValidator()
+    ])
+    return [
+        prompt.query('Player %s name:' % (i + 1), default='Player %s' % (i + 1))
+        for i in range(int(num_players))
+    ]
+
+
+def _get_initial_flip(game, player):
+    while True:
+        try:
+            for index, action in list(INIT_ACTIONS.items()):
+                puts('[%s] %s' % (index, action))
+
+            cards = [
+                prompt.query('First card to flip:', validators=[INIT_ACTION_VALIDATOR]),
+                prompt.query('Second card to flip:', validators=[INIT_ACTION_VALIDATOR]),
+            ]
+            game.initial_flip(player, cards)
+        except AssertionError:
+            continue
+
+        return
 
 
 def _puts_formatted_hand(player):
@@ -144,7 +145,7 @@ def _puts_formatted_hand(player):
         puts(
             '| %s|' % str(row[0]).ljust(CARD_WIDTH - 3) +
             '  ' +
-            '| %s|\n' % str(row[1]).ljust(CARD_WIDTH - 3)
+            '| %s|' % str(row[1]).ljust(CARD_WIDTH - 3)
         )
 
         for __ in range(CARD_HEIGHT - 3):
