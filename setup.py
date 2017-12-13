@@ -11,6 +11,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         'clint',
+        'PrettyTable',
     ],
     extras_require={
         'dev': [
