@@ -1,3 +1,4 @@
+from clint.arguments import Args
 from clint.eng import join
 from clint.textui import puts, colored, prompt, validators
 
@@ -31,6 +32,16 @@ def main():
     puts(colored.green('Welcome to Golf!'))
     puts()
 
+    args = Args()
+
+    if args.contains(['-r', '--rules']):
+        _do_rules()
+        return
+
+    _do_game()
+
+
+def _do_game():
     game = Game(players=[Player(name=name) for name in _get_players()])
 
     puts()
@@ -203,3 +214,56 @@ def _puts_bordered_header(text, formatter=str):
     puts(formatter('=' * length))
     puts(formatter(text))
     puts(formatter('=' * length))
+
+
+def _do_rules():
+    puts(
+        """
+        Golf (also known as Polish Polka, Polish Poker, Turtle, Hara Kiri,
+        Poison, or Crazy Nines) is a card game where players try to earn the
+        lowest number of points (as in golf, the sport) over the course of nine
+        rounds (or "holes" to further use golfing terminology). It is a game
+        for two or more players using a standard 52-card deck.
+
+        Each player is dealt 6 cards face down from the deck, the remainder is
+        placed face down and the top card is turned up to start the discard
+        pile beside it. Players arrange their 6 cards in a 2 x 3 grid in front
+        of them and turn 2 of these cards face up. This arrangement is
+        maintained throughout the game and players always have 6 cards in front
+        of them.
+
+        The object is for players to reduce the value of the cards in front of
+        them by either swapping them for lesser value cards or by pairing them
+        up with cards of equal rank and trying to get the lowest score.
+
+        Beginning with the first player, players take turns drawing single cards
+        from either the deck or discard pile. The drawn card may either be
+        swapped for one of that player's 6 cards, or discarded. If the card is
+        swapped for one of the face down cards, the card swapped in remains face
+        up. The round ends when all of a player's cards are face-up. Remaining
+        players then have one turn to draw a card to improve their hands and
+        then scores are totaled and recorded. Then a new round begins.
+
+        During play it is not legal for a player to pick up a card from the
+        discard pile and return it to the discard pile without playing it, to
+        allow another player to retrieve the card. A card picked up from the
+        discard pile must be swapped with one of the current player's cards.
+
+        Game is nine "holes" (deals), and the player with the lowest total score
+        is designated winner.
+
+        Scores are calculated as follows:
+
+            - Aces are worth -2
+            - Kings are worth 0
+            - The Queen of Spades is worth 40
+            - All other cards are worth their face value (face cards are 10)
+            - Cards of the same rank opposite one another in a row cancel each
+              other out
+            - If a player has cards of the same rank in all 4 corners of their
+              arrangement (known as "four corners") at the end of the round,
+              all other players receive 30 points.
+
+        (Taken from https://en.wikipedia.org/wiki/Golf_%28card_game%29, with
+        slight modifications)
+    """)
