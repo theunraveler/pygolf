@@ -3,10 +3,11 @@ from . import cards
 
 class Game(object):
 
-    ROUNDS_PER_GAME = 9
+    DEFAULT_ROUNDS_PER_GAME = 9
 
-    def __init__(self, players):
+    def __init__(self, players, max_rounds=DEFAULT_ROUNDS_PER_GAME):
         self.players = players
+        self.max_rounds = max_rounds
         self.rounds = []
 
     def begin_round(self):
@@ -15,6 +16,10 @@ class Game(object):
     @property
     def current_round(self):
         return self.rounds[-1]
+
+    @property
+    def is_finished(self):
+        return len(self.rounds) == self.max_rounds
 
     @property
     def result(self):

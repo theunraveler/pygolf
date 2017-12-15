@@ -46,12 +46,19 @@ def main():
 
 
 def _do_game():
-    game = Game(players=[Player(name=name) for name in _get_players()])
+    game = Game(
+        players=[Player(name=name) for name in _get_players()],
+        max_rounds=int(prompt.query(
+            'How many rounds would you like to play?',
+            default=str(Game.DEFAULT_ROUNDS_PER_GAME),
+            validators=[validators.IntegerValidator()]
+        )),
+    )
 
     puts()
     puts(colored.green('Awesome.'))
 
-    while len(game.rounds) < 9:
+    while not game.is_finished:
         game.begin_round()
 
         puts()
